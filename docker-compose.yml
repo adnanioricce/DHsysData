@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  db:    
+    image: adnanioricce/dhsys/db:${BRANCH_NAME}
+    build:
+      context:  Database/
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_USER: dhsys
+      POSTGRES_PASSWORD: dhsys
+      POSTGRES_DB: dhsysdb
+      PGDATA: /data/postgres
+    volumes:
+      - dhsys_data:/data/postgres
+    ports:
+      - "2424:5432"
+    networks:
+      - dhsys_network
+    restart: unless-stopped
+  seeder:
+    image: adnanioricce/dhsys/seeder:${BRANCH_NAME}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: "postgresql://user:dhsys@db:5432/dhsysdb"  
+    networks:
+      - dhsys_network
+    restart: unless-stopped  
+networks:
+  dhsys_network:
+    driver: bridge
+
+volumes:
+  dhsys_data: {}

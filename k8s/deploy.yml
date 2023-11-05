@@ -1,0 +1,68 @@
+
+# postgres-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhsysdb-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dhsysdb
+  template:
+    metadata:
+      labels:
+        app: dhsysdb
+    spec:
+      containers:
+        - name: dhsysdb
+          image: dhsysdb:latest
+          env:
+            - name: POSTGRES_DB
+              value: your_database_name
+            - name: POSTGRES_USER
+              value: your_database_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+          ports:
+            - containerPort: 5432  # PostgreSQL default port
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dhsysdb-service
+spec:
+  selector:
+    app: dhsysdb
+  ports:
+    - protocol: TCP
+      port: 2424
+      targetPort: 5432
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dhsysdb-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dhsysdb-secret
+type: Opaque
+data:
+  password: BASE64_ENCODED_PASSWORD  # Use a base64-encoded password for security
+
+
